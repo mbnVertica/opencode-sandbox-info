@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "opencode-sandbox-info",
+  "version": "1.0.11",
+  "description": "OpenCode V2 TUI sidebar card showing ambient facts about the Docker Sandbox the terminal runs in. Fully inert outside sandboxes.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbnVertica/opencode-sandbox-info.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "docker-sandboxes",
+    "sbx",
+    "tui"
+  ],
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.tsx"
+  },
+  "dependencies": {
+    "@opencode/plugin": "2.0.20"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.12",
+    "@opentui/solid": ">=0.5.12",
+    "solid-js": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/core": { "optional": true },
+    "@opentui/solid": { "optional": true },
+    "solid-js": { "optional": true }
+  },
+  "devDependencies": {
+    "@opentui/core": "0.5.13",
+    "@opentui/solid": "0.5.13",
+    "@types/node": "24.10.1",
+    "solid-js": "1.9.12",
+    "typescript": "5.9.3"
+  }
+}

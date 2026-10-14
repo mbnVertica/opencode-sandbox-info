@@ -1,0 +1,71 @@
+# Sandbox-info mixin: ships the opencode-sandbox-info TUI plugin.
+#
+# Single-purpose mixin for any sbx environment: copies the plugin (source
+# files only — no node_modules in git) into
+# ~/.config/opencode/plugins/opencode-sandbox-info/ and ensures the shared
+# UI dependencies exist at the PARENT level (~/.config/opencode/node_modules).
+#
+# Dependency placement matters: @opentui/*, solid-js are optional peer
+# dependencies resolved from the parent so the plugin shares the host TUI's
+# single solid-js instance. Installing them INSIDE the plugin folder yields
+# two reactive runtimes — the card renders once, then never updates (the
+# "frozen card" bug fixed in 1.0.11).
+#
+# A fresh sandbox has no ~/.config/opencode/package.json, where a bare
+# `npm install` would install nothing — so the setup creates a minimal one
+# when missing. Versions are pinned EXACT (0.5.13 / 1.9.12 / 2.0.20) to
+# match the OpenCode 2.0.20 TUI: a parent @opentui/core that drifts from
+# the host's breaks instanceof bridges (same freeze signature). If a
+# package.json already exists there, it must contain these four deps —
+# run: npm i -s @opencode/plugin@2.0.20 @opentui/core@0.5.13 \
+#          @opentui/solid@0.5.13 solid-js@1.9.12
+#
+# Use:
+#   - sbxenv.yaml: add this directory (the one containing this spec.yaml)
+#     to the "kits:" list (mixins concatenate; lists like network allows
+#     union across layers).
+#   - sbx create: pass as an additional (experimental) --kit reference
+#     next to the base kit: sbx create opencode --kit ./base-kit --kit /path/to/this-dir ...
+#
+# The plugin is inert outside sandboxes (self-gates on SANDBOX_NAME).
+# Dependency install needs registry.npmjs.org:443 egress (allowed below)
+# AND a trusted TLS path to it. On hosts behind TLS interception (e.g.
+# Aikido safe-chain), layer this mixin AFTER your CA-trust mixin (or
+# otherwise ship the interception root) — npm fails with "self-signed
+# certificate in certificate chain" otherwise. Verified 2026-10-13:
+# standalone probe sandbox with only this mixin failed exactly that way;
+# with the CA present the same install succeeds (384 packages). The
+# plugin itself makes no network calls at runtime.
+#
+# Sync: files under files\ are a copy of ..\ (this repo root — the plugin
+# source). After editing the plugin, re-copy the 7 files here.
+schemaVersion: "2"
+kind: mixin
+name: sandbox-info
+displayName: OpenCode Sandbox Info
+description: >
+  Ships the opencode-sandbox-info TUI plugin (sidebar card with ambient
+  Docker Sandbox facts: name, id, workspace mode, repos, kits, caps,
+  creds, disk, mem, load) into ~/.config/opencode/plugins/ and ensures
+  shared UI dependencies at the parent config level at creation time. The
+  plugin is inert outside sandboxes (self-gates on SANDBOX_NAME), so
+  including it in base kits is harmless for host-side use. Requires
+  registry.npmjs.org egress for the dependency install.
+version: 1.0.11
+
+permissions:
+  network:
+    allow:
+      - registry.npmjs.org:443
+
+setup:
+  install:
+    - command: >
+        cd /home/agent/.config/opencode &&
+        if [ ! -f package.json ]; then
+          printf '%s\n' '{"name":"opencode-config","private":true,"type":"module","dependencies":{"@opencode/plugin":"2.0.20","@opentui/core":"0.5.13","@opentui/solid":"0.5.13","solid-js":"1.9.12"}}' > package.json;
+        fi &&
+        npm install --no-audit --no-fund &&
+        echo "sandbox-info: shared UI dependencies present at parent config level"
+      user: "agent"
+      description: Install shared UI dependencies at the parent opencode config level
